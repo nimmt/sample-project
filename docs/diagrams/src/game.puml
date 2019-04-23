@@ -1,0 +1,58 @@
+@startuml nimmt
+
+actor User as user
+entity "Nimmt!" as nimmt
+entity Notice as notice
+
+autonumber "<b>[0]"
+
+== 準備フェーズ ==
+
+user -> nimmt: テーブルを作成する
+nimmt -->> notice: CreateTable
+nimmt -> nimmt: ステータス：TableCreated
+nimmt --> user: テーブル ID
+
+loop poling
+  user -> nimmt: テーブル情報を取得する
+  nimmt --> user: テーブル情報 (並んでいるカード, ステータス)
+
+  ref over user
+    ステータスに従い処理
+  end ref
+end
+
+loop プレイヤー数
+  user -> nimmt: 参加する (テーブル ID)
+  nimmt -->> notice: JoinPlayer
+  nimmt --> user: アクセストークン（テーブル ID、手札カード）
+end
+
+user -> nimmt: プレイヤー情報を取得する
+nimmt --> user: プレイヤー情報
+
+user -> nimmt: ゲーム開始
+nimmt -> nimmt: カードを 4 枚テーブルに並べる
+nimmt -->> notice: LineUpCards
+nimmt -> nimmt: ステータス：Selecting
+
+== 進行フェーズ ==
+
+loop プレイヤー数
+  user -> nimmt: カードを選ぶ (数字)
+
+  alt 全員選択
+    nimmt -> nimmt: ステータス：Selected
+
+    nimmt -> nimmt: 選んだカードをテーブルに並べる
+    nimmt -->> notice: LineUpCards
+  end
+end
+
+user -> nimmt: 次のラウンドを開始する
+nimmt -> nimmt: ステータス：Selecting
+nimmt -> notice: NextRound
+
+== 得点計算 ==
+
+@enduml
