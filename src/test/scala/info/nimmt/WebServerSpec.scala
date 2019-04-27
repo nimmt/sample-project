@@ -1,4 +1,4 @@
-import akka.actor.ActorRef
+import akka.actor.{ ActorRef, ActorSystem }
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -8,28 +8,26 @@ import org.scalatest.{ Matchers, WordSpec }
 import akka.http.scaladsl.server._
 import Directives._
 
-// class WebServerSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest with UserRoutes {
+import info.nimmt.CommentRoutes
 
-class WebServerSpec extends WordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
+class WebServerSpec
+  extends WordSpec
+  with Matchers
+  with ScalaFutures
+  with ScalatestRouteTest
+  with CommentRoutes
+{
 
-  // override val userRegistryActor: ActorRef =
-  //   system.actorOf(UserRegistryActor.props, "userRegistry")
-
-  // lazy val routes = userRoutes
-
-  val routes =
-    get {
-      path("hello") {
-        complete("PONG!")
-      }
-    }
+  lazy val routes: Route = commentRoutes
 
   "WebServerRoutes" should {
-    "return no users if no present (GET /hello)" in {
-      val request = HttpRequest(uri = "/hello")
+    "return (GET /comments)" in {
+      val request = HttpRequest(uri = "/comments")
 
       request ~> routes ~> check {
         status should ===(StatusCodes.OK)
+
+        contentType should ===(ContentTypes.`application/json`)
       }
     }
   }
