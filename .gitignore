@@ -5,3 +5,5 @@ target/
 .sbt
 .ivy2
 
+.scala_history
+
