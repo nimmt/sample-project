@@ -12,7 +12,8 @@ import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Future
 
-import info.nimmt.domain.model.Comment
+import akka.actor._
+import akka.persistence._
 
 trait CommentRoutes {
   // needed to run the route
@@ -21,17 +22,15 @@ trait CommentRoutes {
   // needed for the future map/flatmap in the end and future in fetchItem and saveOrder
   implicit val executionContext = system.dispatcher
 
+  // test start
+  val persistentActor = system.actorOf(Props[CommentPersistentActor], "persistentActor-4-scala")
+  // test end
+
+  // NOTE: implicit: https://qiita.com/miyatin0212/items/f70cf68e89e4367fcf2e
   implicit val commentFormat = jsonFormat2(Comment)
 
-  // NOTE: 一時的な永続化領域
-  var comments: List[Comment] = List(
-    Comment("1", "hogehoge1"),
-    Comment("2", "hogehoge2"),
-    Comment("3", "hogehoge3")
-  )
-
   def saveComment(comment: Comment): Future[Done] = {
-    comments = comments :+ comment
+    persistentActor ! comment
 
     Future { Done }
   }
@@ -39,6 +38,12 @@ trait CommentRoutes {
   lazy val commentRoutes: Route =
     path("comments") {
       get {
+        var comments: List[Comment] = List(
+          Comment("1", "hogehoge1"),
+          Comment("2", "hogehoge2"),
+          Comment("3", "hogehoge3")
+        )
+
         complete(comments)
       } ~
       post {
