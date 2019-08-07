@@ -1,37 +1,31 @@
 package info.nimmt
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.Done
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+
+import scala.util.{Failure, Success}
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Future
 
-import info.nimmt.domain.model.Comment
+import slick.driver.MySQLDriver.api._
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import info.nimmt.domain.model.comment.Comment
+import info.nimmt.domain.model.comment.Comments
 
 trait CommentRoutes {
-  // needed to run the route
-  implicit val system = ActorSystem()
-  implicit val materializer = ActorMaterializer()
-  // needed for the future map/flatmap in the end and future in fetchItem and saveOrder
-  implicit val executionContext = system.dispatcher
-
   implicit val commentFormat = jsonFormat2(Comment)
 
-  // NOTE: 一時的な永続化領域
-  var comments: List[Comment] = List(
-    Comment("1", "hogehoge1"),
-    Comment("2", "hogehoge2"),
-    Comment("3", "hogehoge3")
-  )
+  /** Database **/
+  var db: Database = Database.forConfig("mysql")
 
   def saveComment(comment: Comment): Future[Done] = {
-    comments = comments :+ comment
+    db.run(Comments += comment)
 
     Future { Done }
   }
@@ -39,6 +33,13 @@ trait CommentRoutes {
   lazy val commentRoutes: Route =
     path("comments") {
       get {
+        // NOTE: 一時的な永続化領域
+        var comments: List[Comment] = List(
+          Comment("1", "hogehoge1"),
+          Comment("2", "hogehoge2"),
+          Comment("3", "hogehoge3")
+        )
+
         complete(comments)
       } ~
       post {
