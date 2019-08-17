@@ -1,18 +1,20 @@
-package info.nimmt
+package info.nimmt.http
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.Done
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+
+import akka.stream.ActorMaterializer
+
+import akka.actor.{ ActorSystem, ActorRef }
+
 import spray.json.DefaultJsonProtocol._
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-import info.nimmt.domain.model.Comment
+import info.nimmt.domain.model.comment.{ Comment, ApplicationService }
 
 trait CommentRoutes {
   // needed to run the route
@@ -23,32 +25,27 @@ trait CommentRoutes {
 
   implicit val commentFormat = jsonFormat2(Comment)
 
-  // NOTE: 一時的な永続化領域
-  var comments: List[Comment] = List(
-    Comment("1", "hogehoge1"),
-    Comment("2", "hogehoge2"),
-    Comment("3", "hogehoge3")
-  )
+  lazy val commentRoutes: Route = {
+    val service: ActorRef = system.actorOf(ApplicationService.props, "service")
 
-  def saveComment(comment: Comment): Future[Done] = {
-    comments = comments :+ comment
-
-    Future { Done }
-  }
-
-  lazy val commentRoutes: Route =
     path("comments") {
       get {
+        // NOTE: 一時的な永続化領域
+        var comments: List[Comment] = List(
+          Comment("hogehoge1", "inoue"),
+          Comment("hogehoge2", "inoue"),
+          Comment("hogehoge3", "inoue")
+        )
+
         complete(comments)
       } ~
       post {
         entity(as[Comment]) { comment =>
-          val saved: Future[Done] = saveComment(comment)
+          service ! comment
 
-          onComplete(saved) { done =>
-            complete(comment)
-          }
+          complete(comment)
         }
       }
     }
+  }
 }

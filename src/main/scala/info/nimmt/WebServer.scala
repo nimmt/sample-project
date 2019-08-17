@@ -5,6 +5,8 @@ import akka.http.scaladsl.server.Route
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+import info.nimmt.http.CommentRoutes
+
 object WebServer extends App with CommentRoutes {
   lazy val routes: Route = commentRoutes
 

@@ -7,3 +7,5 @@ target/
 
 .scala_history
 
+.metals/
+.bloop/
