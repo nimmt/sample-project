@@ -28,6 +28,8 @@ trait CommentRoutes {
   lazy val commentRoutes: Route = {
     val service: ActorRef = system.actorOf(ApplicationService.props, "service")
 
+    import ApplicationService._
+
     path("comments") {
       get {
         // NOTE: 一時的な永続化領域
@@ -41,7 +43,7 @@ trait CommentRoutes {
       } ~
       post {
         entity(as[Comment]) { comment =>
-          service ! comment
+          service ! Create(comment)
 
           complete(comment)
         }

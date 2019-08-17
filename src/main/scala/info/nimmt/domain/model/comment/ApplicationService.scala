@@ -14,21 +14,14 @@ object ApplicationService {
 }
 
 class ApplicationService extends Actor with MySQLDBImpl {
+  import ApplicationService._
   import driver.api._
 
   def receive = {
-    case comment: Comment => {
-      // val f: Future[Int] = db.run(Comments += comment)
-
-      // f.onComplete {
-      //   case Success(value) => Future { Done }
-      //   case Failure(e) => throw new RuntimeException(e.getMessage())
-      // }
-
+    case Create(comment) =>
       Await.result(
         db.run(Comments += comment),
         Duration.Inf
       )
-    }
   }
 }
