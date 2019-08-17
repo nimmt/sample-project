@@ -1,3 +1,3 @@
 package info.nimmt.domain.model.comment
 
-final case class Comment(identity: String, content: String)
+final case class Comment(content: String, contributor_name: String)
